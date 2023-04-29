@@ -2,7 +2,7 @@ import './App.css'
 import { useState, useLayoutEffect, useContext } from 'react'
 
 
-import { Tabs, Tab, TabPanels, TabPanel, TabList, Flex, Box, Image, Button, Menu, MenuButton, MenuList, MenuItem, Tooltip, Icon } from '@chakra-ui/react'
+import { Tabs, Tab, TabPanels, TabPanel, TabList, Flex, Box, Image, Button, Menu, MenuButton, MenuList, MenuItem, Tooltip, Divider } from '@chakra-ui/react'
 import { FaRegSave } from 'react-icons/fa'
 import { AiOutlineFormatPainter } from 'react-icons/ai'
 import { FiTrash } from 'react-icons/fi'
@@ -42,34 +42,44 @@ const App = () => {
           <Flex justify='space-between' align='center' marginBottom='15px' position='fixed' width='100%' padding='20px 20px 30px 20px' boxShadow='2xl' borderRadius='20px'>
             <Tabs variant='soft-rounded' colorScheme='blue' size='lg' defaultIndex={0} height='18vh'>
               <TabList paddingBottom='5px'>
-                <Tab>Drawable objects</Tab>
+                <Tab>Objects</Tab>
                 <Tab>Options</Tab>
               </TabList>
               <TabPanels>
                 <TabPanel>
                   <Flex gap='30px'>
-                    <Box as='Button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(object === 'LINE') ? '1' : '0.5'} borderColor={(object === 'LINE' ? 'accent' : 'white')}>
+                    <Box as='Button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(object === 'LINE') ? '1' : '0.5'} borderColor={(object === 'LINE' ? 'accent' : 'white')} onClick={() => setObject('LINE')}>
                       <Tooltip label='Line' bg='accent' borderRadius='full'>
-                        <Image src='icon_line.png' boxSize='30px' onClick={() => setObject('LINE')} />
-                      </Tooltip>
-                    </Box>
-                    <Box as='Button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(object === 'RECTANGLE') ? '1' : '0.5'} borderColor={(object === 'RECTANGLE' ? 'accent' : 'white')}>
-                      <Tooltip label='Rectangle' bg='accent' borderRadius='full'>
-                        <Image src='icon_rectangle.png' boxSize='30px' onClick={() => setObject('RECTANGLE')} />
-                      </Tooltip>
-                    </Box>
-                    <Box as='Button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(object === 'ELLIPSE') ? '1' : '0.5'} borderColor={(object === 'ELLIPSE' ? 'accent' : 'white')}>
-                      <Tooltip label='Ellipse' bg='accent' borderRadius='full'>
-                        <Image src='icon_ellipse.png' boxSize='30px' onClick={() => setObject('ELLIPSE')} />
+                        <Image src='icon_line.png' boxSize='30px' />
                       </Tooltip>
                     </Box>
 
-                    <Box as='Button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px'>
-                      <Tooltip label='Clear all' bg='accent' borderRadius='full'>
-                        <Image src='icon_clear.png' boxSize='30px' onClick={() => {
+                    <Box as='Button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(object === 'RECTANGLE') ? '1' : '0.5'} borderColor={(object === 'RECTANGLE' ? 'accent' : 'white')} onClick={() => setObject('RECTANGLE')}>
+                      <Tooltip label='Rectangle' bg='accent' borderRadius='full'>
+                        <Image src='icon_rectangle.png' boxSize='30px' />
+                      </Tooltip>
+                    </Box>
+
+                    <Box as='Button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(object === 'ELLIPSE') ? '1' : '0.5'} borderColor={(object === 'ELLIPSE' ? 'accent' : 'white')}  onClick={() => setObject('ELLIPSE')}>
+                      <Tooltip label='Ellipse' bg='accent' borderRadius='full'>
+                        <Image src='icon_ellipse.png' boxSize='30px' />
+                      </Tooltip>
+                    </Box>
+
+                    <Divider orientation='vertical' width='5px' height='55px' bg='primary' />
+
+                    <Box as='Button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' onClick={() => {
                           setObject('EMPTY')
                           setRefresher(prev => prev + 1)
-                        }} />
+                        }}>
+                      <Tooltip label='Clear all' bg='accent' borderRadius='full'>
+                        <Image src='icon_clear.png' boxSize='30px' />
+                      </Tooltip>
+                    </Box>
+
+                    <Box as='Button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(object === 'SELECT') ? '1' : '0.5'} borderColor={(object === 'SELECT' ? 'accent' : 'white')} onClick={() => setObject('SELECT')}>
+                      <Tooltip label='Select' bg='accent' borderRadius='full'>
+                        <Image src='icon_select.png' boxSize='30px' />
                       </Tooltip>
                     </Box>
                   </Flex>
@@ -86,7 +96,13 @@ const App = () => {
                       </MenuList>
                     </Menu>
                     <Button leftIcon={<AiOutlineFormatPainter />} variant='outline' colorScheme='blue'>Fill object</Button>
-                    <Button leftIcon={<FaRegSave />} variant='outline' colorScheme='blue' >Save to .png file</Button>
+                    <Menu>
+                      <MenuButton as={Button} variant='outline' colorScheme='blue' leftIcon={<FaRegSave />}>Save</MenuButton>
+                      <MenuList boxShadow='2xl'>
+                        <MenuItem>Save locally</MenuItem>
+                        <MenuItem>Save to .png file</MenuItem>
+                      </MenuList>
+                    </Menu>
                   </Flex>
 
                 </TabPanel>

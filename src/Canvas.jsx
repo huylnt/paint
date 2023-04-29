@@ -8,7 +8,12 @@ const Canvas = ({ object, color, penWidth, penStrokeType, refresher, setRefreshe
   const { figures, setFigures } = canvasContext
 
   const [isDrawing, setIsDrawing] = useState(false)
+  const [selectedElement, setSelectedElement] = useState()
   let roughCanvas
+  const [offsetMouse, setOffsetMouse] = useState({
+    x: 0,
+    y: 0
+  })
 
   const corConverter = (mouseX1, mouseY1, mouseX2, mouseY2) => {
     return {
@@ -42,6 +47,38 @@ const Canvas = ({ object, color, penWidth, penStrokeType, refresher, setRefreshe
     canvas.style.height = `${rect.height}px`;
   }
 
+  const distance = (a, b) => Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2))
+
+  const isWithinLine = (figure, mouseX, mouseY) => {
+    const a = { x: figure.mouseX1, y: figure.mouseY1 }
+    const b = { x: figure.mouseX2, y: figure.mouseY2 }
+    const c = { x: mouseX, y: mouseY }
+    const offset = distance(a, b) - (distance(a, c) + distance(b, c))
+    return Math.abs(offset) < 1 ? true : false
+  }
+
+  const isWithinRectangle = (figure, mouseX, mouseY) => {
+    const minX = Math.min(figure.mouseX1, figure.mouseX2)
+    const maxX = Math.max(figure.mouseX1, figure.mouseX2)
+    const minY = Math.min(figure.mouseY1, figure.mouseY2)
+    const maxY = Math.max(figure.mouseY1, figure.mouseY2)
+    return mouseX >= minX && mouseX <= maxX && mouseY >= minY && mouseY <= maxY
+  }
+
+  const isWithinEllipse = (figure, mouseX, mouseY) => {
+    const origin = { x: figure.mouseX1, y: figure.mouseY1 }
+    const mouse = { x: mouseX, y: mouseY }
+    const boudaryWidth = { x: figure.mouseX2 - figure.mouseX1, y: figure.mouseY1 }
+    const boundaryHeight = { x: figure.mouseX1, y: figure.mouseY2 - figure.mouseY1 }
+
+    return distance(origin, mouse) < distance(origin, boudaryWidth) && distance(origin, mouse) < distance(origin, boundaryHeight)
+  }
+
+  const isWithinElement = (mouseX, mouseY) => {
+    const selectedElement = figures.find(figure => isWithinLine(figure, mouseX, mouseY) || isWithinRectangle(figure, mouseX, mouseY) || isWithinEllipse(figure, mouseX, mouseY))
+    return selectedElement
+  }
+
   useLayoutEffect(() => {
     const canvas = document.getElementById('canvas')
     const canvasContext = canvas.getContext('2d')
@@ -58,7 +95,7 @@ const Canvas = ({ object, color, penWidth, penStrokeType, refresher, setRefreshe
     }
 
     roughCanvas = new RoughCanvas(canvas)
-    console.log('Still')
+
     figures.forEach(({ objectType, strokeColor, penWidth, strokeLineStyle, mouseX1, mouseY1, mouseX2, mouseY2 }) => {
       const { canvasX1, canvasY1, canvasX2, canvasY2 } = corConverter(mouseX1, mouseY1, mouseX2, mouseY2)
       if (objectType === 'LINE') {
@@ -82,16 +119,27 @@ const Canvas = ({ object, color, penWidth, penStrokeType, refresher, setRefreshe
     setIsDrawing(true)
     const { clientX, clientY } = event
 
-    setFigures(prev => [...prev, {
-      objectType: object,
-      strokeColor: color,
-      penWidth: penWidth,
-      strokeLineStyle: strokeTypeConverter(penStrokeType),
-      mouseX1: clientX,
-      mouseY1: clientY,
-      mouseX2: undefined,
-      mouseY2: undefined
-    }])
+    if (object !== 'SELECT')
+      setFigures(prev => [...prev, {
+        id: figures.length,
+        objectType: object,
+        strokeColor: color,
+        penWidth: penWidth,
+        strokeLineStyle: strokeTypeConverter(penStrokeType),
+        mouseX1: clientX,
+        mouseY1: clientY,
+        mouseX2: undefined,
+        mouseY2: undefined
+      }])
+
+    else {
+      const tempSelectedElement = isWithinElement(clientX, clientY)
+      if (tempSelectedElement) {
+        setSelectedElement(tempSelectedElement)
+        offsetMouse.x = clientX - tempSelectedElement.mouseX1
+        offsetMouse.y = clientY - tempSelectedElement.mouseY1
+      }
+    }
 
   }
 
@@ -99,8 +147,41 @@ const Canvas = ({ object, color, penWidth, penStrokeType, refresher, setRefreshe
     if (!isDrawing) return
     const { clientX, clientY } = event
 
-    figures[figures.length - 1].mouseX2 = clientX
-    figures[figures.length - 1].mouseY2 = clientY
+    if (object !== 'SELECT') {
+      figures[figures.length - 1].mouseX2 = clientX
+      figures[figures.length - 1].mouseY2 = clientY
+    }
+
+    else if (object === 'SELECT') {
+      if (selectedElement) {
+        if (selectedElement.objectType === 'LINE') {
+          const distanceX = selectedElement.mouseX2 - selectedElement.mouseX1
+          const distanceY = selectedElement.mouseY2 - selectedElement.mouseY1
+          selectedElement.mouseX1 = clientX - offsetMouse.x
+          selectedElement.mouseY1 = clientY - offsetMouse.y
+          selectedElement.mouseX2 = clientX - offsetMouse.x + distanceX
+          selectedElement.mouseY2 = clientY - offsetMouse.y + distanceY
+        }
+
+        else if (selectedElement.objectType === 'RECTANGLE') {
+          const width = selectedElement.mouseX2  - selectedElement.mouseX1
+          const height = selectedElement.mouseY2 - selectedElement.mouseY1
+          selectedElement.mouseX1 = clientX - offsetMouse.x
+          selectedElement.mouseY1 = clientY - offsetMouse.y
+          selectedElement.mouseX2 = clientX - offsetMouse.x + width
+          selectedElement.mouseY2 = clientY - offsetMouse.y + height
+        }
+
+        else if (selectedElement.objectType === 'ELLIPSE') {
+          const width = (selectedElement.mouseX2  - selectedElement.mouseX1)
+          const height = (selectedElement.mouseY2 - selectedElement.mouseY1)
+          selectedElement.mouseX1 = clientX - offsetMouse.x
+          selectedElement.mouseY1 = clientY - offsetMouse.y
+          selectedElement.mouseX2 = clientX - offsetMouse.x + width
+          selectedElement.mouseY2 = clientY - offsetMouse.y + height
+        }
+      }
+    }
 
     setRefresher(prev => prev + 1)
   }
@@ -119,9 +200,7 @@ const Canvas = ({ object, color, penWidth, penStrokeType, refresher, setRefreshe
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-    >
-
-    </canvas>
+    ></canvas>
   )
 }
 
