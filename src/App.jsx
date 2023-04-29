@@ -9,7 +9,7 @@ import { BiColorFill } from 'react-icons/bi'
 import { BsPencil } from 'react-icons/bs'
 
 import Canvas from 'Canvas'
-import ColorPickerDialog from 'component/ColorPickerDialog'
+import Dialog from 'component/Dialog'
 
 import { extendTheme, ChakraProvider } from '@chakra-ui/react'
 const colors = {
@@ -23,7 +23,9 @@ const theme = extendTheme({ colors })
 const App = () => {
   const [object, setObject] = useState()
   const [color, setColor] = useState()
-  const [colorPickerDialogOpened, setColorPickerDialogOpened] = useState(false)
+  const [penWidth, setPenWidth] = useState(1)
+  const [strokeType, setStrokeType] = useState('CONTINUOUS')
+  const [dialogContext, setDialogContext] = useState()
 
   useLayoutEffect(() => {
     setObject('LINE')
@@ -34,7 +36,7 @@ const App = () => {
     <ChakraProvider theme={theme}>
       <Box>
 
-        <Flex justify='space-between' align='center' marginBottom='15px' position='fixed' width='100%' padding='20px 20px 30px 20px' boxShadow='2xl' borderRadisu='20px'>
+        <Flex justify='space-between' align='center' marginBottom='15px' position='fixed' width='100%' padding='20px 20px 30px 20px' boxShadow='2xl' borderRadius='20px'>
           <Tabs variant='soft-rounded' colorScheme='blue' size='lg' defaultIndex={0} height='18vh'>
             <TabList paddingBottom='5px'>
               <Tab>Drawable objects</Tab>
@@ -61,8 +63,8 @@ const App = () => {
                   <Menu>
                     <MenuButton as={Button} variant='outline' colorScheme='blue' leftIcon={<BsPencil />}>Configure pen</MenuButton>
                     <MenuList boxShadow='2xl'>
-                      <MenuItem>Change pen width</MenuItem>
-                      <MenuItem>Change stroke type</MenuItem>
+                      <MenuItem onClick={() => setDialogContext("PEN_WIDTH")}>Change pen width</MenuItem>
+                      <MenuItem onClick={() => setDialogContext("PEN_STROKE_TYPE")}>Change stroke type</MenuItem>
                     </MenuList>
                   </Menu>
                   <Button leftIcon={<AiOutlineFormatPainter />} variant='outline' colorScheme='blue'>Fill object</Button>
@@ -75,16 +77,18 @@ const App = () => {
 
           <Flex flexFlow='column' gap='10px' align='center'>
             <Box fontFamily='Alkatra'>Selected color</Box>
-            <Box bg={color} borderRadius='full' padding='20px 50px' onClick={() => setColorPickerDialogOpened(true)}></Box>
+            <Box bg={color} borderRadius='full' padding='20px 50px' onClick={() => setDialogContext("PEN_COLOR")}></Box>
           </Flex>
           
         </Flex>
 
-        <Canvas object={object} color={color} />
+        <Canvas object={object} color={color} penWidth={penWidth} penStrokeType={strokeType} />
       </Box>
 
-      {colorPickerDialogOpened && <ColorPickerDialog color={color} setColor={setColor} setOpened={setColorPickerDialogOpened} />}
-      
+      {dialogContext === 'PEN_COLOR' && <Dialog context={dialogContext} setOpened={setDialogContext} color={color} setColor={setColor} />}
+      {dialogContext === 'PEN_WIDTH' && <Dialog context={dialogContext} setOpened={setDialogContext} penWidth={penWidth} setPenWidth={setPenWidth} />}
+      {dialogContext === 'PEN_STROKE_TYPE' && <Dialog context={dialogContext} setOpened={setDialogContext} strokeType={strokeType} setStrokeType={setStrokeType} />}
+
     </ChakraProvider>
   )
 }
