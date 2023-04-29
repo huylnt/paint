@@ -84,6 +84,7 @@ const App = () => {
       </Box>
 
       {colorPickerDialogOpened && <ColorPickerDialog color={color} setColor={setColor} setOpened={setColorPickerDialogOpened} />}
+      
     </ChakraProvider>
   )
 }
