@@ -39,28 +39,34 @@ const ensureHighQuality = (canvas, canvasContext) => {
 const distance = (a, b) => Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2))
 
 const isWithinLine = (figure, mouseX, mouseY) => {
+  if (figure.action !== 'DRAWING_LINE') return false
   const a = { x: figure.mouseX1, y: figure.mouseY1 }
   const b = { x: figure.mouseX2, y: figure.mouseY2 }
   const c = { x: mouseX, y: mouseY }
   const offset = distance(a, b) - (distance(a, c) + distance(b, c))
-  return Math.abs(offset) < 1 ? true : false
+  const result = Math.abs(offset) < 1 ? true : false
+  return result
 }
 
 const isWithinRectangle = (figure, mouseX, mouseY) => {
+  if (figure.action !== 'DRAWING_RECTANGLE') return false
   const minX = Math.min(figure.mouseX1, figure.mouseX2)
   const maxX = Math.max(figure.mouseX1, figure.mouseX2)
   const minY = Math.min(figure.mouseY1, figure.mouseY2)
   const maxY = Math.max(figure.mouseY1, figure.mouseY2)
-  return mouseX >= minX && mouseX <= maxX && mouseY >= minY && mouseY <= maxY
+  const result = mouseX >= minX && mouseX <= maxX && mouseY >= minY && mouseY <= maxY
+  return result
 }
 
 const isWithinEllipse = (figure, mouseX, mouseY) => {
+  if (figure.action !== 'DRAWING_ELLIPSE') return false
   const origin = { x: figure.mouseX1, y: figure.mouseY1 }
   const mouse = { x: mouseX, y: mouseY }
   const boudaryWidth = { x: figure.mouseX2 - figure.mouseX1, y: figure.mouseY1 }
   const boundaryHeight = { x: figure.mouseX1, y: figure.mouseY2 - figure.mouseY1 }
 
-  return distance(origin, mouse) <= distance(origin, boundaryHeight) || (distance(origin, mouse) > distance(origin, boundaryHeight) && distance(origin, mouse) <= distance(origin, boudaryWidth)) 
+  const result = distance(origin, mouse) <= distance(origin, boundaryHeight) || (distance(origin, mouse) > distance(origin, boundaryHeight) && distance(origin, mouse) <= distance(origin, boudaryWidth)) 
+  return result
 }
 
 const wrapText = (context, text, fromLeft, fromTop, maxWidth) => {
@@ -218,11 +224,8 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
 
     else {
       const tempSelectedElement = isWithinElement(clientX, clientY)
- 
+
       if (tempSelectedElement) {
-        setSelectedElement(tempSelectedElement)
-        offsetMouse.x = clientX - tempSelectedElement.mouseX1
-        offsetMouse.y = clientY - tempSelectedElement.mouseY1
 
         if (action === 'FILLING') {
           tempSelectedElement.fillColor = color
@@ -230,8 +233,18 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
         }
 
         else if (action === 'TYPING_TEXT') {
-          selectedElementIndex.current = tempSelectedElement.id
+   
+          if (tempSelectedElement.action !== 'DRAWING_LINE') selectedElementIndex.current = tempSelectedElement.id
+          else {
+            setRefresher(prev => prev + 1)
+            return
+          }
         }
+
+        setSelectedElement(tempSelectedElement)
+        offsetMouse.x = clientX - tempSelectedElement.mouseX1
+        offsetMouse.y = clientY - tempSelectedElement.mouseY1
+        
       }
 
       else if (action === 'TYPING_TEXT') {

@@ -37,7 +37,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "MyShop",
+      "identifier": "Paint",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
