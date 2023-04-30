@@ -1,7 +1,8 @@
-import { useLayoutEffect, useState } from 'react'
+import { useLayoutEffect, useState, useRef, useContext } from 'react'
 import { RoughCanvas } from 'roughjs/bin/canvas'
 import { originCanvasContext } from 'context/CanvasContext'
-import { useContext } from 'react'
+
+import { Textarea } from '@chakra-ui/react'
 
 const corConverter = (mouseX1, mouseY1, mouseX2, mouseY2) => {
   return {
@@ -59,20 +60,44 @@ const isWithinEllipse = (figure, mouseX, mouseY) => {
   const boudaryWidth = { x: figure.mouseX2 - figure.mouseX1, y: figure.mouseY1 }
   const boundaryHeight = { x: figure.mouseX1, y: figure.mouseY2 - figure.mouseY1 }
 
-  return distance(origin, mouse) < distance(origin, boudaryWidth) && distance(origin, mouse) < distance(origin, boundaryHeight)
+  return distance(origin, mouse) <= distance(origin, boundaryHeight) || (distance(origin, mouse) > distance(origin, boundaryHeight) && distance(origin, mouse) <= distance(origin, boudaryWidth)) 
 }
 
-const Canvas = ({ object, color, penWidth, penStrokeType, refresher, setRefresher }) => {
+const wrapText = (context, text, fromLeft, fromTop, maxWidth) => {
+  const lineHeight = 35
+  var words = text.split('');
+  var line = '';
+
+  for(var n = 0; n < words.length; n++) {
+    var testLine = line + words[n] + '';
+    var metrics = context.measureText(testLine);
+    var testWidth = metrics.width;
+
+    if ((testWidth > maxWidth) && n > 0) {
+      context.fillText(line, fromLeft, fromTop);
+      line = words[n] + '';
+      fromTop += lineHeight;
+    }
+    else {
+      line = testLine;
+    }
+  }
+  context.fillText(line, fromLeft, fromTop);
+}
+
+const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefresher }) => {
   const canvasContext = useContext(originCanvasContext)
   const { figures, setFigures } = canvasContext
 
-  const [isDrawing, setIsDrawing] = useState(false)
+  const [mouseDown, setMouseDown] = useState(false)
   const [selectedElement, setSelectedElement] = useState()
-  let roughCanvas
+  const selectedElementIndex = useRef(-1)
   const [offsetMouse, _] = useState({
     x: 0,
     y: 0
   })
+
+  let roughCanvas
 
   const isWithinElement = (mouseX, mouseY) => {
     const selectedElement = figures.find(figure => isWithinLine(figure, mouseX, mouseY) || isWithinRectangle(figure, mouseX, mouseY) || isWithinEllipse(figure, mouseX, mouseY))
@@ -80,7 +105,7 @@ const Canvas = ({ object, color, penWidth, penStrokeType, refresher, setRefreshe
   }
 
   const transitElement = (clientX, clientY) => {
-    if (selectedElement.objectType === 'LINE') {
+    if (selectedElement.action === 'DRAWING_LINE') {
       const distanceX = selectedElement.mouseX2 - selectedElement.mouseX1
       const distanceY = selectedElement.mouseY2 - selectedElement.mouseY1
       selectedElement.mouseX1 = clientX - offsetMouse.x
@@ -89,8 +114,8 @@ const Canvas = ({ object, color, penWidth, penStrokeType, refresher, setRefreshe
       selectedElement.mouseY2 = clientY - offsetMouse.y + distanceY
     }
 
-    else if (selectedElement.objectType === 'RECTANGLE') {
-      const width = selectedElement.mouseX2  - selectedElement.mouseX1
+    else if (selectedElement.action === 'DRAWING_RECTANGLE') {
+      const width = selectedElement.mouseX2 - selectedElement.mouseX1
       const height = selectedElement.mouseY2 - selectedElement.mouseY1
       selectedElement.mouseX1 = clientX - offsetMouse.x
       selectedElement.mouseY1 = clientY - offsetMouse.y
@@ -98,8 +123,8 @@ const Canvas = ({ object, color, penWidth, penStrokeType, refresher, setRefreshe
       selectedElement.mouseY2 = clientY - offsetMouse.y + height
     }
 
-    else if (selectedElement.objectType === 'ELLIPSE') {
-      const width = (selectedElement.mouseX2  - selectedElement.mouseX1)
+    else if (selectedElement.action === 'DRAWING_ELLIPSE') {
+      const width = (selectedElement.mouseX2 - selectedElement.mouseX1)
       const height = (selectedElement.mouseY2 - selectedElement.mouseY1)
       selectedElement.mouseX1 = clientX - offsetMouse.x
       selectedElement.mouseY1 = clientY - offsetMouse.y
@@ -108,9 +133,43 @@ const Canvas = ({ object, color, penWidth, penStrokeType, refresher, setRefreshe
     }
   }
 
-  const fillElement = () => {
-    selectedElement.fillColor = color
-    // setRefresher(prev => prev + 1)
+  const removeEmptyTextBox = () => {
+    const filteredFigures = figures.filter(figure => !(figure.isJustText && !figure.text))
+    setFigures(filteredFigures)
+  }
+
+  const renderAllFigures = (canvasContext) => {
+    const lineHeight = 35
+
+    figures.forEach(({ action, strokeColor, penWidth, strokeLineStyle, fillColor, mouseX1, mouseY1, mouseX2, mouseY2, text }) => {
+      const { canvasX1, canvasY1, canvasX2, canvasY2 } = corConverter(mouseX1, mouseY1, mouseX2, mouseY2)
+      if (action === 'DRAWING_LINE') {
+        roughCanvas.line(canvasX1, canvasY1, canvasX2, canvasY2, { stroke: (fillColor) ? fillColor : strokeColor, strokeWidth: penWidth, strokeLineDash: strokeLineStyle })
+        if (text) canvasContext.fillText(text, canvasX1, canvasY1)
+      }
+      else if (action === 'DRAWING_RECTANGLE') {
+        const width = canvasX2 - canvasX1
+        const height = canvasY2 - canvasY1
+        roughCanvas.rectangle(canvasX1, canvasY1, width, height, { stroke: strokeColor, strokeWidth: penWidth, strokeLineDash: strokeLineStyle, fill: fillColor, fillWeight: 5 })
+        if (text) {
+          const maxWidth = 0.8 * width
+          const fromLeft = canvasX1 + 0.1 * width
+          const fromTop = canvasY1 + 40
+          wrapText(canvasContext, text, fromLeft, fromTop, maxWidth)
+        }
+      }
+      else if (action === 'DRAWING_ELLIPSE') {
+        const width = (canvasX2 - canvasX1) * 2
+        const height = (canvasY2 - canvasY1) * 2
+        roughCanvas.ellipse(canvasX1, canvasY1, width, height, { stroke: strokeColor, strokeWidth: penWidth, strokeLineDash: strokeLineStyle, fill: fillColor })
+        if (text) {
+          const maxWidth = 0.8 * width
+          const fromLeft = canvasX1 - 0.4 * width
+          const fromTop = canvasY1 - 0.2 * height
+          wrapText(canvasContext, text, fromLeft, fromTop, maxWidth)
+        }
+      }
+    })
   }
 
   useLayoutEffect(() => {
@@ -120,96 +179,144 @@ const Canvas = ({ object, color, penWidth, penStrokeType, refresher, setRefreshe
     ensureHighQuality(canvas, canvasContext)
 
     canvasContext.clearRect(0, 0, canvas.width, canvas.height)
+    canvasContext.font = "30px Arial"
 
     if (figures.length < 1) return
 
-    if (object === 'TRASH') {
+    if (action === 'CLEARING_ALL') {
       figures.length = 0
+      setMouseDown(false)
+      selectedElementIndex.current = -1
+      setRefresher(prev => prev + 1)
       return
     }
 
     roughCanvas = new RoughCanvas(canvas)
 
-    figures.forEach(({ objectType, strokeColor, penWidth, strokeLineStyle, fillColor, mouseX1, mouseY1, mouseX2, mouseY2 }) => {
-      const { canvasX1, canvasY1, canvasX2, canvasY2 } = corConverter(mouseX1, mouseY1, mouseX2, mouseY2)
-      if (objectType === 'LINE') {
-        roughCanvas.line(canvasX1, canvasY1, canvasX2, canvasY2, { stroke: (fillColor) ? fillColor : strokeColor, strokeWidth: penWidth, strokeLineDash: strokeLineStyle })
-      }
-      else if (objectType === 'RECTANGLE') {
-        const width = canvasX2 - canvasX1
-        const height = canvasY2 - canvasY1
-        roughCanvas.rectangle(canvasX1, canvasY1, width, height, { stroke: strokeColor, strokeWidth: penWidth, strokeLineDash: strokeLineStyle, fill: fillColor, fillWeight: 5 })
-      }
-      else if (objectType === 'ELLIPSE') {
-        const width = (canvasX2 - canvasX1) * 2
-        const height = (canvasY2 - canvasY1) * 2
-        roughCanvas.ellipse(canvasX1, canvasY1, width, height, { stroke: strokeColor, strokeWidth: penWidth, strokeLineDash: strokeLineStyle, fill: fillColor })
-      }
-    })
+    renderAllFigures(canvasContext)
+
   }, [refresher])
 
   const handleMouseDown = (event) => {
-    setIsDrawing(true)
+    setMouseDown(true)
     const { clientX, clientY } = event
 
-    if (object === 'LINE' || object === 'RECTANGLE' || object === 'ELLIPSE')
+    if (action === 'DRAWING_LINE' || action === 'DRAWING_RECTANGLE' || action === 'DRAWING_ELLIPSE')
       setFigures(prev => [...prev, {
         id: figures.length,
-        objectType: object,
+        mouseX1: clientX,
+        mouseY1: clientY,
+        mouseX2: undefined,
+        mouseY2: undefined,
+        action: action,
         strokeColor: color,
         penWidth: penWidth,
         strokeLineStyle: strokeTypeConverter(penStrokeType),
         fillColor: undefined,
-        mouseX1: clientX,
-        mouseY1: clientY,
-        mouseX2: undefined,
-        mouseY2: undefined
+        text: undefined
       }])
 
     else {
       const tempSelectedElement = isWithinElement(clientX, clientY)
+ 
       if (tempSelectedElement) {
         setSelectedElement(tempSelectedElement)
         offsetMouse.x = clientX - tempSelectedElement.mouseX1
         offsetMouse.y = clientY - tempSelectedElement.mouseY1
 
-        if (object === 'FILL') {
+        if (action === 'FILLING') {
           tempSelectedElement.fillColor = color
           setRefresher(prev => prev + 1)
         }
+
+        else if (action === 'TYPING_TEXT') {
+          selectedElementIndex.current = tempSelectedElement.id
+        }
       }
+
+      else if (action === 'TYPING_TEXT') {
+        const filteredFigures = figures.filter(figure => !(figure.isJustText && !figure.text))
+
+        const tempFigure = {
+          id: filteredFigures.length,
+          mouseX1: clientX,
+          mouseY1: clientY,
+          mouseX2: clientX + 200,
+          mouseY2: clientY + 80,
+          action: 'DRAWING_RECTANGLE',
+          strokeColor: 'gray',
+          penWidth: 1,
+          strokeLineStyle: strokeTypeConverter('DASH_DASH'),
+          fillColor: 'transparent',
+          text: undefined,
+          isJustText: true
+        }
+        filteredFigures.push(tempFigure)
+        setFigures(filteredFigures)
+        setSelectedElement(tempFigure)
+        selectedElementIndex.current = filteredFigures.length - 1
+
+        setRefresher(prev => prev + 1)
+      }
+
     }
 
   }
 
   const handleMouseMove = (event) => {
-    if (!isDrawing) return
+    if (!mouseDown) return
+
     const { clientX, clientY } = event
 
-    if (object === 'SELECT') {
-      if (selectedElement) transitElement(clientX, clientY)
+    if (action === 'SELECTING') {
+      if (selectedElement) {
+        if ((selectedElement.isJustText && selectedElement.text) || !selectedElement.isJustText) {
+          transitElement(clientX, clientY)
+        }
+        else {
+          removeEmptyTextBox()
+          selectedElementIndex.current = -1
+        } 
+      }
+      setRefresher(prev => prev + 1)
     }
 
-    else if (object === 'LINE' || object === 'RECTANGLE' || object === 'ELLIPSE') {
+    else if (action === 'DRAWING_LINE' || action === 'DRAWING_RECTANGLE' || action === 'DRAWING_ELLIPSE') {
       figures[figures.length - 1].mouseX2 = clientX
       figures[figures.length - 1].mouseY2 = clientY
+      setRefresher(prev => prev + 1)
     }
 
-    setRefresher(prev => prev + 1)
+    
   }
 
   const handleMouseUp = (event) => {
-    setIsDrawing(false)
+    setMouseDown(false)
+  }
+
+  const handleTextareaChanged = (event) => {
+    const textarea = event.target
+    selectedElement.text = textarea.value
+    setRefresher(prev => prev + 1)
+  }
+
+  const handleTextareaBlur = (event) => {
+    event.target.value = ''
   }
 
   return (
-    <canvas
-      id='canvas'
-      style={{ width: '100vw', height: '100vh' }}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-    ></canvas>
+    <>
+      <canvas
+        id='canvas'
+        style={{ width: '100vw', height: '100vh' }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      ></canvas>
+
+      {(selectedElementIndex.current >= 0) && <Textarea placeholder='Type something here' onChange={handleTextareaChanged} onBlur={handleTextareaBlur} position='fixed' left={selectedElement.mouseX1} top={selectedElement.mouseY1 - 70} width={`${selectedElement.mouseX2 - selectedElement.mouseX1}px`} />}
+    </>
+
   )
 }
 

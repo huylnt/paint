@@ -22,7 +22,7 @@ const colors = {
 const theme = extendTheme({ colors })
 
 const App = () => {
-  const [object, setObject] = useState()
+  const [action, setAction] = useState()
   const [color, setColor] = useState()
   const [penWidth, setPenWidth] = useState(1)
   const [strokeType, setStrokeType] = useState('CONTINUOUS')
@@ -30,8 +30,8 @@ const App = () => {
   const [refresher, setRefresher] = useState(0)
 
   useLayoutEffect(() => {
-    if (!object) {
-      setObject('LINE')
+    if (!action) {
+      setAction('DRAWING_LINE')
       setColor('black')
     }
   }, [])
@@ -49,25 +49,25 @@ const App = () => {
               <TabPanels>
                 <TabPanel>
                   <Flex gap='30px'>
-                    <Box as='button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(object === 'LINE') ? '1' : '0.5'} borderColor={(object === 'LINE' ? 'accent' : 'white')} onClick={() => setObject('LINE')}>
+                    <Box as='button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(action === 'DRAWING_LINE') ? '1' : '0.5'} borderColor={(action === 'DRAWING_LINE' ? 'accent' : 'white')} onClick={() => setAction('DRAWING_LINE')}>
                       <Tooltip label='Line' bg='accent' borderRadius='full'>
                         <Image src='icon_line.png' boxSize='30px' />
                       </Tooltip>
                     </Box>
 
-                    <Box as='button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(object === 'RECTANGLE') ? '1' : '0.5'} borderColor={(object === 'RECTANGLE' ? 'accent' : 'white')} onClick={() => setObject('RECTANGLE')}>
+                    <Box as='button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(action === 'DRAWING_RECTANGLE') ? '1' : '0.5'} borderColor={(action === 'DRAWING_RECTANGLE' ? 'accent' : 'white')} onClick={() => setAction('DRAWING_RECTANGLE')}>
                       <Tooltip label='Rectangle' bg='accent' borderRadius='full'>
                         <Image src='icon_rectangle.png' boxSize='30px' />
                       </Tooltip>
                     </Box>
 
-                    <Box as='button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(object === 'ELLIPSE') ? '1' : '0.5'} borderColor={(object === 'ELLIPSE' ? 'accent' : 'white')} onClick={() => setObject('ELLIPSE')}>
+                    <Box as='button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(action === 'DRAWING_ELLIPSE') ? '1' : '0.5'} borderColor={(action === 'DRAWING_ELLIPSE' ? 'accent' : 'white')} onClick={() => setAction('DRAWING_ELLIPSE')}>
                       <Tooltip label='Ellipse' bg='accent' borderRadius='full'>
                         <Image src='icon_ellipse.png' boxSize='30px' />
                       </Tooltip>
                     </Box>
 
-                    <Box as='button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(object === 'TEXT') ? '1' : '0.5'} borderColor={(object === 'TEXT' ? 'accent' : 'white')} onClick={() => setObject('TEXT')}>
+                    <Box as='button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(action === 'TYPING_TEXT') ? '1' : '0.5'} borderColor={(action === 'TYPING_TEXT' ? 'accent' : 'white')} onClick={() => setAction('TYPING_TEXT')}>
                       <Tooltip label='Text' bg='accent' borderRadius='full'>
                         <div>
                           <CiText size='30px' />
@@ -77,13 +77,13 @@ const App = () => {
 
                     <Divider orientation='vertical' width='5px' height='55px' bg='primary' />
 
-                    <Box as='button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(object === 'SELECT') ? '1' : '0.5'} borderColor={(object === 'SELECT' ? 'accent' : 'white')} onClick={() => setObject('SELECT')}>
+                    <Box as='button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(action === 'SELECTING') ? '1' : '0.5'} borderColor={(action === 'SELECTING' ? 'accent' : 'white')} onClick={() => setAction('SELECTING')}>
                       <Tooltip label='Select' bg='accent' borderRadius='full'>
                         <Image src='icon_select.png' boxSize='30px' />
                       </Tooltip>
                     </Box>
 
-                    <Box as='button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(object === 'FILL') ? '1' : '0.5'} borderColor={(object === 'FILL' ? 'accent' : 'white')} onClick={() => setObject('FILL')}>
+                    <Box as='button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' opacity={(action === 'FILLING') ? '1' : '0.5'} borderColor={(action === 'FILLING' ? 'accent' : 'white')} onClick={() => setAction('FILLING')}>
                       <Tooltip label='Fill' bg='accent' borderRadius='full'>
                         <div>
                           <AiOutlineFormatPainter size='30px' />
@@ -94,7 +94,7 @@ const App = () => {
                     <Divider orientation='vertical' width='5px' height='55px' bg='primary' />
 
                     <Box as='Button' padding='10px' bg='white' borderRadius='full' width='fit-content' height='fit-content' boxShadow='dark-lg' borderWidth='3px' onClick={() => {
-                      setObject('TRASH')
+                      setAction('CLEARING_ALL')
                       setRefresher(prev => prev + 1)
                     }}>
                       <Tooltip label='Clear all' bg='accent' borderRadius='full'>
@@ -137,7 +137,7 @@ const App = () => {
 
           </Flex>
 
-          <Canvas object={object} color={color} penWidth={penWidth} penStrokeType={strokeType} refresher={refresher} setRefresher={setRefresher} />
+          <Canvas action={action} color={color} penWidth={penWidth} penStrokeType={strokeType} refresher={refresher} setRefresher={setRefresher} />
         </Box>
 
         {dialogContext === 'PEN_COLOR' && <Dialog context={dialogContext} setOpened={setDialogContext} color={color} setColor={setColor} />}
