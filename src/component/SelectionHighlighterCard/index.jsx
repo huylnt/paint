@@ -1,6 +1,11 @@
-import { useLayoutEffect, useRef, useState } from "react"
-import { Box } from "@chakra-ui/react";
-const SelectionHighlighterCard = ({ selectedElement, refresher }) => {
+import { useLayoutEffect, useRef, useState, useContext } from "react"
+import { originCanvasContext } from "context/CanvasContext"
+import { Box } from "@chakra-ui/react"
+
+const SelectionHighlighterCard = ({ refresher }) => {
+     const canvasContext = useContext(originCanvasContext)
+     const { selectedElement } = canvasContext
+
      const { action, mouseX1, mouseX2, mouseY1, mouseY2 } = selectedElement
      const top = useRef()
      const left = useRef()

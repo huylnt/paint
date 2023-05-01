@@ -65,7 +65,7 @@ const isWithinEllipse = (figure, mouseX, mouseY) => {
   const boudaryWidth = { x: figure.mouseX2 - figure.mouseX1, y: figure.mouseY1 }
   const boundaryHeight = { x: figure.mouseX1, y: figure.mouseY2 - figure.mouseY1 }
 
-  const result = distance(origin, mouse) <= distance(origin, boundaryHeight) || (distance(origin, mouse) > distance(origin, boundaryHeight) && distance(origin, mouse) <= distance(origin, boudaryWidth)) 
+  const result = distance(origin, mouse) <= distance(origin, boundaryHeight) || (distance(origin, mouse) > distance(origin, boundaryHeight) && distance(origin, mouse) <= distance(origin, boudaryWidth))
   return result
 }
 
@@ -74,7 +74,7 @@ const wrapText = (context, text, fromLeft, fromTop, maxWidth) => {
   var words = text.split('');
   var line = '';
 
-  for(var n = 0; n < words.length; n++) {
+  for (var n = 0; n < words.length; n++) {
     var testLine = line + words[n] + '';
     var metrics = context.measureText(testLine);
     var testWidth = metrics.width;
@@ -93,10 +93,9 @@ const wrapText = (context, text, fromLeft, fromTop, maxWidth) => {
 
 const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefresher }) => {
   const canvasContext = useContext(originCanvasContext)
-  const { figures, setFigures } = canvasContext
+  const { figures, setFigures, selectedElement, setSelectedElement } = canvasContext
 
   const [mouseDown, setMouseDown] = useState(false)
-  const [selectedElement, setSelectedElement] = useState()
   const selectedElementIndex = useRef(-1)
   const [offsetMouse, _] = useState({
     x: 0,
@@ -178,7 +177,18 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
     })
   }
 
+  const handleKeyDown = (event) => {
+    if (event.key === 'Delete') {
+      console.log(selectedElement)
+      setFigures(figures.filter(figure => figure !== selectedElement))
+      setSelectedElement(undefined)
+      setRefresher(prev => prev + 1)
+    }
+  }
+
   useLayoutEffect(() => {
+    window.addEventListener('keydown', handleKeyDown)
+
     const canvas = document.getElementById('canvas')
     const canvasContext = canvas.getContext('2d')
 
@@ -189,8 +199,10 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
 
     if (figures.length < 1) return
 
-    if (action !== 'SELECTING') setSelectedElement(undefined)
-    
+    if (action !== 'SELECTING' && action !== 'TYPING_TEXT' && action !== 'FILLING') setSelectedElement(undefined)
+
+    if (action !== 'TYPING_TEXT') selectedElementIndex.current = -1
+
     if (action === 'CLEARING_ALL') {
       figures.length = 0
       setMouseDown(false)
@@ -237,7 +249,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
         }
 
         else if (action === 'TYPING_TEXT') {
-   
+
           if (tempSelectedElement.action !== 'DRAWING_LINE') selectedElementIndex.current = tempSelectedElement.id
           else {
             setRefresher(prev => prev + 1)
@@ -248,7 +260,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
         setSelectedElement(tempSelectedElement)
         offsetMouse.x = clientX - tempSelectedElement.mouseX1
         offsetMouse.y = clientY - tempSelectedElement.mouseY1
-        
+        setRefresher(prev => prev + 1)
       }
 
       else if (action === 'TYPING_TEXT') {
@@ -268,6 +280,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
           text: undefined,
           isJustText: true
         }
+
         filteredFigures.push(tempFigure)
         setFigures(filteredFigures)
         setSelectedElement(tempFigure)
@@ -293,7 +306,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
         else {
           removeEmptyTextBox()
           selectedElementIndex.current = -1
-        } 
+        }
       }
       setRefresher(prev => prev + 1)
     }
@@ -304,7 +317,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
       setRefresher(prev => prev + 1)
     }
 
-    
+
   }
 
   const handleMouseUp = (event) => {
@@ -332,7 +345,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
       ></canvas>
 
       {(selectedElementIndex.current >= 0) && <Textarea placeholder='Type something here' onChange={handleTextareaChanged} onBlur={handleTextareaBlur} position='fixed' left={selectedElement.mouseX1} top={selectedElement.mouseY1 - 70} width={`${selectedElement.mouseX2 - selectedElement.mouseX1}px`} />}
-      {(selectedElement) && <SelectionHighlighterCard selectedElement={selectedElement} refresher={refresher} />}
+      {(selectedElement) && <SelectionHighlighterCard refresher={refresher} />}
     </>
 
   )
