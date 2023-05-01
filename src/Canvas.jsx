@@ -190,14 +190,14 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
   }
 
   const renderAllFigures = (canvasContext) => {
-    const lineHeight = 35
-
     figures.forEach(({ action, strokeColor, penWidth, strokeLineStyle, fillColor, mouseX1, mouseY1, mouseX2, mouseY2, text }) => {
       const { canvasX1, canvasY1, canvasX2, canvasY2 } = corConverter(mouseX1, mouseY1, mouseX2, mouseY2)
+      
       if (action === 'DRAWING_LINE') {
         roughCanvas.line(canvasX1, canvasY1, canvasX2, canvasY2, { stroke: (fillColor) ? fillColor : strokeColor, strokeWidth: penWidth, strokeLineDash: strokeLineStyle })
         if (text) canvasContext.fillText(text, canvasX1, canvasY1)
       }
+
       else if (action === 'DRAWING_RECTANGLE') {
         const width = canvasX2 - canvasX1
         const height = canvasY2 - canvasY1
@@ -209,6 +209,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
           wrapText(canvasContext, text, fromLeft, fromTop, maxWidth)
         }
       }
+
       else if (action === 'DRAWING_ELLIPSE') {
         const width = (canvasX2 - canvasX1) * 2
         const height = (canvasY2 - canvasY1) * 2
@@ -240,7 +241,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
 
     ensureHighQuality(canvas, canvasContext)
 
-    canvasContext.clearRect(0, 0, canvas.width, canvas.height)
+    // canvasContext.clearRect(0, 0, canvas.width, canvas.height)
     canvasContext.font = "30px Arial"
 
     if (action === 'SAVE_LOCALLY') {
@@ -249,7 +250,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
 
     if (figures.length < 1) return
 
-    if (action !== 'SELECTING' && action !== 'TYPING_TEXT' && action !== 'FILLING') setSelectedElement(undefined)
+    if (action !== 'SELECTING' && action !== 'TYPING_TEXT') setSelectedElement(undefined)
 
     if (action !== 'TYPING_TEXT') selectedElementIndex.current = -1
 
@@ -287,7 +288,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
         penWidth: penWidth,
         strokeLineStyle: strokeTypeConverter(penStrokeType),
         fillColor: undefined,
-        text: undefined
+        text: undefined,
       }])
 
     else {

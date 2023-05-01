@@ -1,25 +1,6 @@
-import {
-     Modal,
-     ModalOverlay,
-     ModalContent,
-     ModalHeader,
-     ModalFooter,
-     ModalBody,
-     Button,
-     Center
-} from '@chakra-ui/react'
-
+import {Modal,ModalOverlay,ModalContent,ModalHeader,ModalFooter,ModalBody,Button,Center,Select} from '@chakra-ui/react'
+import {NumberInput,NumberInputField,NumberInputStepper,NumberIncrementStepper,NumberDecrementStepper} from '@chakra-ui/react'
 import { HexColorPicker } from "react-colorful"
-
-import {
-     NumberInput,
-     NumberInputField,
-     NumberInputStepper,
-     NumberIncrementStepper,
-     NumberDecrementStepper,
-} from '@chakra-ui/react'
-
-import { Select } from '@chakra-ui/react'
 
 const Dialog = ({ context, setOpened, color, setColor, penWidth, setPenWidth, strokeType, setStrokeType }) => {
      return (
