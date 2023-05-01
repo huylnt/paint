@@ -2,7 +2,21 @@ import { useLayoutEffect, useState, useRef, useContext } from 'react'
 import { RoughCanvas } from 'roughjs/bin/canvas'
 import { originCanvasContext } from 'context/CanvasContext'
 import SelectionHighlighterCard from 'component/SelectionHighlighterCard'
-import { Textarea } from '@chakra-ui/react'
+import { Textarea, useToast } from '@chakra-ui/react'
+import { writeData } from 'localFile'
+
+const handleSaveLocally = async (figures, toast) => {
+  const response = await writeData('figures.json', figures)
+  toast({
+    title: 'Your process has been successfully saved locally',
+    variant: 'subtle',
+    status: 'success',
+    position: 'bottom-right',
+    colorScheme: 'blue',
+    duration: 3000,
+  })
+
+}
 
 const corConverter = (mouseX1, mouseY1, mouseX2, mouseY2) => {
   return {
@@ -102,6 +116,8 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
     y: 0
   })
 
+  const toast = useToast()  
+
   let roughCanvas
 
   const isWithinElement = (mouseX, mouseY) => {
@@ -199,6 +215,10 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
 
     if (figures.length < 1) return
 
+    if (action === 'SAVE_LOCALLY') {
+      handleSaveLocally(figures, toast)
+    }
+
     if (action !== 'SELECTING' && action !== 'TYPING_TEXT' && action !== 'FILLING') setSelectedElement(undefined)
 
     if (action !== 'TYPING_TEXT') selectedElementIndex.current = -1
@@ -217,7 +237,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
 
     renderAllFigures(canvasContext)
 
-  }, [refresher, action])
+  }, [refresher, action, figures])
 
   const handleMouseDown = (event) => {
     setMouseDown(true)

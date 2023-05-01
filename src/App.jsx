@@ -120,8 +120,8 @@ const App = () => {
                     <Menu>
                       <MenuButton as={Button} variant='outline' colorScheme='blue' leftIcon={<FaRegSave />}>Save</MenuButton>
                       <MenuList boxShadow='2xl'>
-                        <MenuItem>Save locally</MenuItem>
-                        <MenuItem>Save to .png file</MenuItem>
+                        <MenuItem onClick={() => setAction('SAVE_LOCALLY')}>Save locally</MenuItem>
+                        <MenuItem onClick={() => setAction('SAVE_AS_PNG')}>Save to .png file</MenuItem>
                       </MenuList>
                     </Menu>
                   </Flex>

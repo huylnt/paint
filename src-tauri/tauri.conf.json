@@ -64,7 +64,7 @@
       {
         "fullscreen": false,
         "height": 650,
-        "resizable": false,
+        "resizable": true,
         "title": "My Shop",
         "width": 1200,
         "center": true
