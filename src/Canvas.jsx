@@ -4,6 +4,8 @@ import { originCanvasContext } from 'context/CanvasContext'
 import SelectionHighlighterCard from 'component/SelectionHighlighterCard'
 import { Textarea, useToast } from '@chakra-ui/react'
 import { writeData } from 'localFile'
+import html2canvas from 'html2canvas'
+import { convertToLocaleDateString } from 'valueConverter'
 
 const handleSaveLocally = async (figures, toast) => {
   const response = await writeData('figures.json', figures)
@@ -15,7 +17,35 @@ const handleSaveLocally = async (figures, toast) => {
     colorScheme: 'blue',
     duration: 3000,
   })
+}
 
+const handleSaveAsPNG = async (canvas, toast) => {
+  console.log(canvas)
+  html2canvas(canvas).then((canvas) => {
+    const link = document.createElement('a');
+    link.download = "My drawing - ".concat(convertToLocaleDateString()).concat('.png')
+    link.href = canvas.toDataURL();
+    console.log(link)
+    link.click();
+  });
+
+  toast({
+    title: 'Your drawing has been successfully saved to .png file format',
+    variant: 'subtle',
+    status: 'success',
+    position: 'bottom-right',
+    colorScheme: 'blue',
+    duration: 3000,
+  })
+
+  toast({
+    title: 'You can also right click to the canvas and choose Save...',
+    variant: 'solid',
+    status: 'info',
+    position: 'bottom-left',
+    colorScheme: 'blue',
+    duration: 3000,
+  })
 }
 
 const corConverter = (mouseX1, mouseY1, mouseX2, mouseY2) => {
@@ -116,7 +146,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
     y: 0
   })
 
-  const toast = useToast()  
+  const toast = useToast()
 
   let roughCanvas
 
@@ -213,11 +243,11 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
     canvasContext.clearRect(0, 0, canvas.width, canvas.height)
     canvasContext.font = "30px Arial"
 
-    if (figures.length < 1) return
-
     if (action === 'SAVE_LOCALLY') {
       handleSaveLocally(figures, toast)
     }
+
+    if (figures.length < 1) return
 
     if (action !== 'SELECTING' && action !== 'TYPING_TEXT' && action !== 'FILLING') setSelectedElement(undefined)
 
@@ -231,11 +261,13 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
       return
     }
 
-
-
     roughCanvas = new RoughCanvas(canvas)
 
     renderAllFigures(canvasContext)
+
+    if (action === 'SAVE_AS_PNG') {
+      handleSaveAsPNG(canvas, toast)
+    }
 
   }, [refresher, action, figures])
 
