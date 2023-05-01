@@ -40,7 +40,7 @@ const App = () => {
     <ChakraProvider theme={theme}>
       <CanvasContext>
         <Box>
-          <Flex justify='space-between' align='center' marginBottom='15px' position='fixed' width='100%' padding='20px 20px 30px 20px' boxShadow='1px 12px 24px 9px rgba(57,128,146,0.27)' borderRadius='20px'>
+          <Flex justify='space-between' align='center' marginBottom='15px' position='fixed' width='100%' padding='20px 20px 30px 20px' boxShadow='1px 12px 24px 9px rgba(57,128,146,0.27)' borderRadius='20px' zIndex='1' bg='white'>
             <Tabs variant='soft-rounded' colorScheme='blue' size='lg' defaultIndex={0} height='18vh'>
               <TabList paddingBottom='5px'>
                 <Tab>Objects</Tab>

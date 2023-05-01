@@ -99,18 +99,15 @@ const isWithinRectangle = (figure, mouseX, mouseY) => {
   const minY = Math.min(figure.mouseY1, figure.mouseY2)
   const maxY = Math.max(figure.mouseY1, figure.mouseY2)
   const result = mouseX >= minX && mouseX <= maxX && mouseY >= minY && mouseY <= maxY
+  console.log('rectangle')
   return result
 }
 
 const isWithinEllipse = (figure, mouseX, mouseY) => {
-  if (figure.action !== 'DRAWING_ELLIPSE') return false
-  const origin = { x: figure.mouseX1, y: figure.mouseY1 }
-  const mouse = { x: mouseX, y: mouseY }
-  const boudaryWidth = { x: figure.mouseX2 - figure.mouseX1, y: figure.mouseY1 }
-  const boundaryHeight = { x: figure.mouseX1, y: figure.mouseY2 - figure.mouseY1 }
+  const semiMajor = Math.max(Math.abs(figure.mouseX2 - figure.mouseX1), Math.abs(figure.mouseY2 - figure.mouseY1)) * 2
+  const semiMinor = Math.min(Math.abs(figure.mouseX2 - figure.mouseX1), Math.abs(figure.mouseY2 - figure.mouseY1)) * 2
 
-  const result = distance(origin, mouse) <= distance(origin, boundaryHeight) || (distance(origin, mouse) > distance(origin, boundaryHeight) && distance(origin, mouse) <= distance(origin, boudaryWidth))
-  return result
+  return !(Math.pow((mouseX - figure.mouseX1), 2) / Math.pow(semiMajor, 2) + Math.pow((mouseY - figure.mouseY1), 2) / Math.pow(semiMinor, 2) > 1)
 }
 
 const wrapText = (context, text, fromLeft, fromTop, maxWidth) => {
@@ -192,7 +189,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
   const renderAllFigures = (canvasContext) => {
     figures.forEach(({ action, strokeColor, penWidth, strokeLineStyle, fillColor, mouseX1, mouseY1, mouseX2, mouseY2, text }) => {
       const { canvasX1, canvasY1, canvasX2, canvasY2 } = corConverter(mouseX1, mouseY1, mouseX2, mouseY2)
-      
+
       if (action === 'DRAWING_LINE') {
         roughCanvas.line(canvasX1, canvasY1, canvasX2, canvasY2, { stroke: (fillColor) ? fillColor : strokeColor, strokeWidth: penWidth, strokeLineDash: strokeLineStyle })
         if (text) canvasContext.fillText(text, canvasX1, canvasY1)
@@ -226,7 +223,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
 
   const handleKeyDown = (event) => {
     if (event.key === 'Delete') {
-      console.log(selectedElement)
+      if (!selectedElement) return
       setFigures(figures.filter(figure => figure !== selectedElement))
       setSelectedElement(undefined)
       setRefresher(prev => prev + 1)
@@ -293,7 +290,6 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
 
     else {
       const tempSelectedElement = isWithinElement(clientX, clientY)
-
       if (tempSelectedElement) {
 
         if (action === 'FILLING') {
@@ -339,6 +335,11 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
         setSelectedElement(tempFigure)
         selectedElementIndex.current = filteredFigures.length - 1
 
+        setRefresher(prev => prev + 1)
+      }
+
+      else if (action === 'SELECTING') {
+        setSelectedElement(undefined)
         setRefresher(prev => prev + 1)
       }
 
