@@ -1,7 +1,7 @@
 import { useLayoutEffect, useState, useRef, useContext } from 'react'
 import { RoughCanvas } from 'roughjs/bin/canvas'
 import { originCanvasContext } from 'context/CanvasContext'
-
+import SelectionHighlighterCard from 'component/SelectionHighlighterCard'
 import { Textarea } from '@chakra-ui/react'
 
 const corConverter = (mouseX1, mouseY1, mouseX2, mouseY2) => {
@@ -189,6 +189,8 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
 
     if (figures.length < 1) return
 
+    if (action !== 'SELECTING') setSelectedElement(undefined)
+    
     if (action === 'CLEARING_ALL') {
       figures.length = 0
       setMouseDown(false)
@@ -197,11 +199,13 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
       return
     }
 
+
+
     roughCanvas = new RoughCanvas(canvas)
 
     renderAllFigures(canvasContext)
 
-  }, [refresher])
+  }, [refresher, action])
 
   const handleMouseDown = (event) => {
     setMouseDown(true)
@@ -328,6 +332,7 @@ const Canvas = ({ action, color, penWidth, penStrokeType, refresher, setRefreshe
       ></canvas>
 
       {(selectedElementIndex.current >= 0) && <Textarea placeholder='Type something here' onChange={handleTextareaChanged} onBlur={handleTextareaBlur} position='fixed' left={selectedElement.mouseX1} top={selectedElement.mouseY1 - 70} width={`${selectedElement.mouseX2 - selectedElement.mouseX1}px`} />}
+      {(selectedElement) && <SelectionHighlighterCard selectedElement={selectedElement} refresher={refresher} />}
     </>
 
   )
