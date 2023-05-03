@@ -3,12 +3,12 @@ import { RoughCanvas } from 'roughjs/bin/canvas'
 import { originCanvasContext } from 'context/CanvasContext'
 import SelectionHighlighterCard from 'component/SelectionHighlighterCard'
 import { Textarea, useToast } from '@chakra-ui/react'
-import { writeData } from 'localFile'
+
 import html2canvas from 'html2canvas'
 import { convertToLocaleDateString } from 'valueConverter'
 
-const handleSaveLocally = async (figures, toast) => {
-  const response = await writeData('figures.json', figures)
+const handleSaveLocally = (figures, toast) => {
+  localStorage.setItem('figures', JSON.stringify(figures))
   toast({
     title: 'Your process has been successfully saved locally',
     variant: 'subtle',
