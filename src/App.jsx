@@ -1,7 +1,6 @@
 import './App.css'
 import { useState, useLayoutEffect } from 'react'
 
-
 import { Tabs, Tab, TabPanels, TabPanel, TabList, Flex, Box, Image, Button, Menu, MenuButton, MenuList, MenuItem, Tooltip, Divider } from '@chakra-ui/react'
 import { FaRegSave } from 'react-icons/fa'
 import { AiOutlineFormatPainter } from 'react-icons/ai'
